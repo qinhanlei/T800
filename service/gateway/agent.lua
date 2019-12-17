@@ -3,7 +3,7 @@ local websocket = require "http.websocket"
 local log = require "tm.log"
 
 local parser = require "parser"
-parser.register("msg.proto", "./proto")
+parser.register("T800.proto", "./proto")
 
 local CMD = {}
 
@@ -11,12 +11,12 @@ local CMD = {}
 local handle = {}
 
 function handle.connect(id)
-	log.info("ws connect from: " .. tostring(id))
+	log.info("ws:%s connect", id)
 end
 
 function handle.handshake(id, header, url)
 	local addr = websocket.addrinfo(id)
-	log.debug("ws handshake from: " .. tostring(id), "url", url, "addr:", addr)
+	log.debug("ws:%s handshake from url:%s addr:%s", id, url, addr)
 	log.debug("----header-----")
 	for k,v in pairs(header) do
 		log.debug(k,v)
@@ -25,23 +25,24 @@ function handle.handshake(id, header, url)
 end
 
 function handle.message(id, msg)
+	log.debug("ws:%s message:%s", id, msg)
 	websocket.write(id, msg)
 end
 
 function handle.ping(id)
-	log.debug("ws ping from: " .. tostring(id) .. "\n")
+	log.debug("ws:%s ping", id)
 end
 
 function handle.pong(id)
-	log.debug("ws pong from: " .. tostring(id))
+	log.debug("ws:%s pong", id)
 end
 
 function handle.close(id, code, reason)
-	log.info("ws close from: " .. tostring(id), code, reason)
+	log.info("ws:%s close code:%s reason:%s", id, code, reason)
 end
 
 function handle.error(id)
-	log.error("ws error from: " .. tostring(id))
+	log.error("ws:%s error", id)
 end
 
 

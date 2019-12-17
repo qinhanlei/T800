@@ -3,16 +3,18 @@ local websocket = require "http.websocket"
 local log = require "tm.log"
 
 local parser = require "parser"
-parser.register("msg.proto", "./proto")
+parser.register("T800.proto", "./proto")
+
+local GATE_ADDR = "ws://127.0.0.1:10086"
 
 
 local clientid = ...
 
 local function start()
-	local ws_id = websocket.connect("ws://127.0.0.1:10086")
-	local count = 1
 	clientid = clientid or 0
-	log.debug("this is echo client%d", clientid)
+	log.debug("this is echo client:%d connect to %s", clientid, GATE_ADDR)
+	local ws_id = websocket.connect(GATE_ADDR)
+	local count = 1
 	while true do
 		local msg = "hello world! " .. count
 		count = count + 1

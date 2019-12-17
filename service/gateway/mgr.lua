@@ -14,7 +14,7 @@ skynet.start(function()
 	end)
 
 	local gated = skynet.uniqueservice("gateway/gated")
-	skynet.send(gated, "lua", "start", "localhost", 10086)
+	skynet.send(gated, "lua", "start", "127.0.0.1", 10086)
 
 	skynet.uniqueservice("gateway/logind")
 end)

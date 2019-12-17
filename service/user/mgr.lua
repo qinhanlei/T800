@@ -2,6 +2,13 @@ local skynet = require "skynet"
 local log = require "tm.log"
 
 local CMD = {}
+local usermap = {}
+
+function CMD.new()
+end
+
+function CMD.del()
+end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(session, source, cmd, ...)
