@@ -1,3 +1,4 @@
+-- websocket gate
 local skynet = require "skynet"
 local socket = require "skynet.socket"
 local log = require "tm.log"

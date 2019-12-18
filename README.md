@@ -1,4 +1,4 @@
-# T800-svr
+# T800
 - Based on terminator
 - Just one skynet node
 

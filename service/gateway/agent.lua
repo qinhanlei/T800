@@ -1,16 +1,32 @@
+-- websocket agent
 local skynet = require "skynet"
 local websocket = require "http.websocket"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
+local msgutil = require "msgutil"
 
 local CONN_TIMEOUT = 10*100
+local AUTH_TIMEOUT = 5*100--5*60*100
 
+local STATE = {
+	shaked = 0,
+	authed = 1,
+}
 
 local ws_map = {}  -- ws_id -> ws_info:table
 
-local function timeout(id)
-	log.debug("ws:%d timeout!", id)
-	websocket.close(id, 0, "timeout")
+
+local function send(id, name, msg)
+	local data = msgutil.pack(name, msg)
+	if data then
+		websocket.write(id, data, "binary")
+	end
+end
+
+
+local function timeout(id, reason)
+	log.debug("ws:%d %s!", id, reason)
+	websocket.close(id, 0, reason)
 end
 
 local function ticktock()
@@ -20,7 +36,10 @@ local function ticktock()
 		now = skynet.now()
 		for k, v in pairs(ws_map) do
 			if now - v.lasttime > CONN_TIMEOUT then
-				skynet.fork(timeout, k)
+				skynet.fork(timeout, k, "activity_timeout")
+			end
+			if v.state == STATE.shaked and now - v.shakedtime > AUTH_TIMEOUT then
+				skynet.fork(timeout, k, "auth_timeout")
 			end
 			count = count + 1
 			if count > 100 then
@@ -42,18 +61,25 @@ end
 
 function handle.handshake(id, header, url)
 	local addr = websocket.addrinfo(id)
+	local now = skynet.now()
 	log.debug("ws:%s handshake from url:%s addr:%s", id, url, addr)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
-		status = 0,
-		lasttime = skynet.now()
+		state = STATE.shaked,
+		lasttime = now,
+		shakedtime = now,
 	}
 end
 
-function handle.message(id, msg)
-	log.debug("ws:%s message:%s", id, msg)
-	websocket.write(id, msg)
+function handle.message(id, data)
+	log.debug("ws:%s message:%s", id, data)
 	ws_map[id].lasttime = skynet.now()
+	local name, msg = msgutil.unpack(data)
+	if name then
+		log.debug("recv %s: %s", name, xdump(msg))
+		send(id, "on"..name, { result = 42 })
+	end
+	-- websocket.write(id, msg)
 end
 
 function handle.ping(id)

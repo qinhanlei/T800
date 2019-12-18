@@ -26,4 +26,5 @@ luaservice = skypath.."/service/?.lua;"..
 			"./testing/?.lua;"
 lua_path = skypath.."/lualib/?.lua;"..
 			tmpath.."/lualib/?.lua;"..
+			"./lualib/?.lua;"..
 			"./testing/?.lua;"
