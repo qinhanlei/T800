@@ -11,6 +11,6 @@ skynet.start(function()
 	skynet.uniqueservice("user/mgr")
 
 	skynet.newservice("console")
-	skynet.newservice("debug_console", 9600)
+	skynet.newservice("debug_console", 9601)
 	skynet.exit()
 end)

@@ -6,3 +6,9 @@
 ## Networks
 - HTTP
 - WebSocket with protobuf
+
+
+## How to use
+- clone [terminator](https://github.com/qinhanlei/terminator) then build
+- let `terminator` and `T800` in same path
+- `sh run.sh`
