@@ -1,5 +1,13 @@
 package T800;
 
+// Big hump naming
+// Response must be `onXEQ` which `XEQ` is request
+
+message UserInfo {
+	required string uid = 1;
+}
+
+
 message Register {
 	required string account = 1;
 	required string password = 2;
@@ -9,6 +17,7 @@ message Register {
 message onRegister {
 	required int result = 1;
 }
+
 
 message Auth {
 	required string account = 1;

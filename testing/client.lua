@@ -7,7 +7,7 @@ local msgutil = require "msgutil"
 local GATE_ADDR = "ws://127.0.0.1:10086"
 
 local QUICK_TIME = 60*60*100
-local TICK_INTERVAL = 2*100
+local TICK_INTERVAL = 3*100
 
 local CMD = {}
 local clientid = ...
@@ -34,7 +34,7 @@ local function ticktock()
 		-- local msg = "hello world! " .. counter
 		-- websocket.write(ws_id, msg)
 		-- log.debug("client%d --->> %s", clientid, msg)
-
+		log.info(" --- ping ---> ")
 		websocket.ping(ws_id)
 		skynet.sleep(TICK_INTERVAL)
 	end
@@ -69,7 +69,7 @@ local function readloop()
 				f(msg)
 			end
 		end
-		-- skynet.sleep(1)
+		skynet.sleep(1)
 	end
 	log.info("readloop ended!")
 end

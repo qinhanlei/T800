@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+require "skynet.manager"
 local log = require "tm.log"
 
 local CMD = {}

@@ -26,13 +26,13 @@ function msgutil.pack(name, msg)
 	local fullname = PACKAGE..'.'..name
 	if not protobuf.check(fullname) then
 		log.warn("proto name:%s not exist!", name)
-		return
+		return nil, "invalid proto name"
 	end
 
 	local ok, data = pcall(protobuf.encode, fullname, msg)
 	if not ok then
-		log.error("encode proto:%s failed:%s msg:%s", name, pb, xdump(msg))
-		return
+		log.error("encode proto:%s failed:%s msg:%s", name, data, xdump(msg))
+		return nil, data
 	end
 
 	name = encode(name)
@@ -63,7 +63,7 @@ function msgutil.unpack(data)
 	local ok, msg = pcall(protobuf.decode, fullname, data)
 	if not ok then
 		log.error("decode proto:%s failed:%s", name, msg)
-		return
+		return nil, msg
 	end
 	return name, msg
 end
