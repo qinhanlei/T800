@@ -1,12 +1,8 @@
 package T800;
 
-// Big hump naming
-// Response must be `onXEQ` which `XEQ` is request
-
-message UserInfo {
-	required string uid = 1;
-}
-
+// Let all client request proto have response proto for simple
+// Request or Server pushed only proto are Big hump naming
+// Response proto must be `onXEQ` which `XEQ` is request proto
 
 message Register {
 	required string account = 1;
@@ -26,4 +22,9 @@ message Auth {
 
 message onAuth {
 	required int result = 1;
+}
+
+
+message UserInfo {
+	required string uid = 1;
 }

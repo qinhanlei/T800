@@ -27,13 +27,7 @@ end
 
 
 local function ticktock()
-	local counter = 0
 	while ws_id do
-		counter = counter + 1
-
-		-- local msg = "hello world! " .. counter
-		-- websocket.write(ws_id, msg)
-		-- log.debug("client%d --->> %s", clientid, msg)
 		log.info(" --- ping ---> ")
 		websocket.ping(ws_id)
 		skynet.sleep(TICK_INTERVAL)
@@ -50,8 +44,6 @@ local function readloop()
 			ws_id = nil
 			break
 		end
-
-		-- log.debug("client%d <<--- %s", clientid, (resp and resp or "[Close] " .. close_reason))
 		if not resp then
 			log.error("client:%d server close by reason:%s", clientid, close_reason)
 			ws_id = nil

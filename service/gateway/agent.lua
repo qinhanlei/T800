@@ -5,13 +5,12 @@ local websocket = require "http.websocket"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
 local msgutil = require "msgutil"
-local msgcode = require "msgcode"
+local mycode = require "mycode"
 
 local CONN_TIMEOUT = 10*100
 local AUTH_TIMEOUT = 8*60*100
-local STATE = msgcode.WS_STATE
+local STATE = mycode.WS_STATE
 
-local idx = ...
 --NOTE: handler API list by websocket.lua, see simplewebsocket.lua
 local handle = {}
 local ws_map = {}  -- ws_id -> ws_info:table
@@ -70,7 +69,7 @@ local function dispatch(id, name, msg)
 	if w.state == STATE.shaked then
 		service = ".logind"
 	else
-		service = nil --TODO: ...
+		service = w.uagent
 	end
 	if not service then return end
 	local ret = skynet.call(service, "lua", name, id, msg)
@@ -92,6 +91,7 @@ function handle.handshake(id, header, url)
 	log.debug("ws:%s on handshake from url:%s addr:%s", id, url, addr)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
+		uid = nil,
 		state = STATE.shaked,
 		lasttime = now,
 		shakedtime = now,
@@ -139,8 +139,11 @@ function CMD.start(...)
 	skynet.fork(accept, ...)
 end
 
-function CMD.authed(id)
-	ws_map[id].state = STATE.authed
+function CMD.authed(id, uid, uagent)
+	local w = ws_map[id]
+	w.uid = uid
+	w.uagent = uagent
+	w.state = STATE.authed
 	log.debug("ws:%d authed! %s", id, xdump(ws_map[id]))
 end
 
@@ -153,6 +156,5 @@ skynet.start(function()
 		local f = assert(CMD[cmd], cmd .. " not found")
 		skynet.retpack(f(...))
 	end)
-	skynet.register(".wsagent"..idx)
 	skynet.fork(ticktock)
 end)
