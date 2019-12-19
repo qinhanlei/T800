@@ -56,13 +56,13 @@ end
 local handle = {}
 
 function handle.connect(id)
-	log.info("ws:%s connect", id)
+	log.info("ws:%s on connect", id)
 end
 
 function handle.handshake(id, header, url)
 	local addr = websocket.addrinfo(id)
 	local now = skynet.now()
-	log.debug("ws:%s handshake from url:%s addr:%s", id, url, addr)
+	log.debug("ws:%s on handshake from url:%s addr:%s", id, url, addr)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
 		state = STATE.shaked,
@@ -72,7 +72,7 @@ function handle.handshake(id, header, url)
 end
 
 function handle.message(id, data)
-	log.debug("ws:%s message:%s", id, data)
+	log.debug("ws:%s on message", id)
 	ws_map[id].lasttime = skynet.now()
 	local name, msg = msgutil.unpack(data)
 	if name then
@@ -83,36 +83,41 @@ function handle.message(id, data)
 end
 
 function handle.ping(id)
-	log.debug("ws:%s ping", id)
+	log.debug("ws:%s on ping", id)
 	ws_map[id].lasttime = skynet.now()
 end
 
 function handle.pong(id)
-	log.debug("ws:%s pong", id)
+	log.debug("ws:%s on pong", id)
 	ws_map[id].lasttime = skynet.now()
 end
 
 function handle.close(id, code, reason)
-	log.info("ws:%s close code:%s reason:%s", id, code, reason)
+	log.info("ws:%s on close code:%s reason:%s", id, code, reason)
 	ws_map[id] = nil
 end
 
 function handle.error(id)
-	log.error("ws:%s error", id)
+	log.error("ws:%s on error", id)
 	ws_map[id] = nil
+end
+
+
+local function accept(id, addr, protocol)
+	log.info("start fd:%d addr:%s protocol:%s", id, addr, protocol)
+	local ok, err = websocket.accept(id, handle, protocol, addr)
+	if not ok then
+		log.error("websocket error:%s", err)
+		handle.error(id)
+	end
 end
 
 
 local CMD = {}
 
-function CMD.start(id, addr, protocol)
-	log.info("start fd:%d addr:%s protocol:%s", id, addr, protocol)
-	local ok, err = websocket.accept(id, handle, protocol, addr)
-	if not ok then
-		log.error("accept failed:%s", err)
-	end
+function CMD.start(...)
+	skynet.fork(accept, ...)
 end
-
 
 skynet.start(function()
 	skynet.dispatch("lua", function(_, _, cmd, ...)

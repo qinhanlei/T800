@@ -51,9 +51,9 @@ local function readloop()
 			break
 		end
 
-		log.debug("client%d <<--- %s", clientid, (resp and resp or "[Close] " .. close_reason))
+		-- log.debug("client%d <<--- %s", clientid, (resp and resp or "[Close] " .. close_reason))
 		if not resp then
-			log.error("client%d echo server close", clientid)
+			log.error("client:%d server close by reason:%s", clientid, close_reason)
 			ws_id = nil
 			break
 		end

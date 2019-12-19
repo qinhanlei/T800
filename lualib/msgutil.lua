@@ -1,3 +1,4 @@
+local crypt = require "skynet.crypt"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
 
@@ -10,15 +11,14 @@ parser.register(PACKAGE..".proto", "./proto")
 
 local msgutil = {}
 
+local DES_KEY = "56781234"
 
 local function encode(name)
-	--TODO: ...
-	return name
+	return crypt.desencode(DES_KEY, name)
 end
 
 local function decode(name)
-	--TODO: ...
-	return name
+	return crypt.desdecode(DES_KEY, name)
 end
 
 
@@ -51,6 +51,7 @@ function msgutil.unpack(data)
 
 	local n = string.unpack(">I2", data)
 	local name = data:sub(3, 2+n)
+	name = decode(name)
 
 	local fullname = PACKAGE..'.'..name
 	if not protobuf.check(fullname) then
@@ -64,7 +65,7 @@ function msgutil.unpack(data)
 		log.error("decode proto:%s failed:%s", name, msg)
 		return
 	end
-	return decode(name), msg
+	return name, msg
 end
 
 
