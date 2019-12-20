@@ -1,7 +1,7 @@
 package T800;
 
 // Let all client request proto have response proto for simple
-// Request or Server pushed only proto are Big hump naming
+// Request (or Server pushed only) proto are Big hump naming
 // Response proto must be `onXEQ` which `XEQ` is request proto
 
 message Register {

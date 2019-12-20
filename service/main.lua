@@ -9,6 +9,7 @@ skynet.start(function()
 	skynet.uniqueservice("user/mgr")
 	skynet.uniqueservice("logic/mgr")
 	skynet.uniqueservice("dungeon/mgr")
+	skynet.uniqueservice("login/mgr")
 	skynet.uniqueservice("gateway/mgr")
 
 	skynet.newservice("console")
