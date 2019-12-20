@@ -4,6 +4,9 @@ local log = require "tm.log"
 
 local CMD = {}
 
+function CMD.start()
+end
+
 skynet.start(function()
 	skynet.dispatch("lua", function(session, source, cmd, ...)
 		local f = CMD[cmd]
