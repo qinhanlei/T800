@@ -67,7 +67,7 @@ local function dispatch(id, name, msg)
 	local service
 	local w = ws_map[id]
 	if w.state == STATE.shaked then
-		service = ".logind"
+		service = ".login/mgr"
 	else
 		service = w.uagent
 	end
@@ -153,8 +153,12 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(_, _, cmd, ...)
-		local f = assert(CMD[cmd], cmd .. " not found")
-		skynet.retpack(f(...))
+		local f = CMD[cmd]
+		if not f then
+			log.error("session:%s source:%x cmd:%s nil", session, source, cmd)
+			return skynet.retpack()
+		end
+		return skynet.retpack(f(...))
 	end)
 	skynet.fork(ticktock)
 end)
