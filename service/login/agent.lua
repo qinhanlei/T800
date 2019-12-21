@@ -15,15 +15,14 @@ end
 function CMD.Auth(gta, id, msg)
 	log.info("ws:%d auth msg:%s", id, xdump(msg))
 
-	--TODO: ...
-	log.debug("auth succeed!")
+	--TODO: query user info by msg.account
 	local userid = id + 100000
-
 	local uagent = skynet.call(".user/mgr", "lua", "new", {
 		uid = userid,
 		gtagent = gta,
 		nickname = "nickname"..id,
 	})
+	log.debug("auth succeed!")
 	skynet.send(gta, "lua", "authed", id, userid, uagent)
 	return 0
 end

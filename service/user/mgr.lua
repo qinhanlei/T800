@@ -1,30 +1,55 @@
 local skynet = require "skynet"
 require "skynet.manager"
 local log = require "tm.log"
+local timer = require "tm.time".newtimer()
+
+local OFFLINE_TIMEOUT = 5*60*100
 
 local CMD = {}
 local uid2agent = {}
+local offlines = {}
+
+local function offline_timeout(uid)
+	log.debug("offline_timeout uid:%d", uid)
+	if offlines[uid] then
+		CMD.delete(uid, "offline timeout")
+		offlines[uid] = nil
+	end
+end
 
 function CMD.new(u)
-	if uid2agent[u.uid] then
+	log.debug("new uid:%d", u.uid)
+	local uagent = uid2agent[u.uid]
+	if uagent then
 		log.warn("user:%d already exsit!", u.uid)
-		-- kick out ?
-		return
+		skynet.send(agent, "lua", "stop")
 	end
-	local uagent = skynet.newservice("user/agent")
+	uagent = skynet.newservice("user/agent")
 	skynet.call(uagent, "lua", "start", u)
 	uid2agent[u.uid] = uagent
+	if offlines[u.uid] then
+		offlines[u.uid] = false
+	end
 	return uagent
 end
 
-function CMD.delete(uid)
+function CMD.delete(uid, reason)
+	log.debug("delete uid:%d reason:%s", uid, reason)
 	local agent = uid2agent[uid]
-	skynet.send(agent, "lua", "stop")
-	uid2agent[uid] = nil
+	if agent then
+		skynet.send(agent, "lua", "stop", reason)
+		uid2agent[uid] = nil
+	end
 end
 
 function CMD.disconnect(uid)
-	--TODO: notify
+	log.debug("disconnect uid:%d", uid)
+	local agent = uid2agent[uid]
+	if agent then
+		skynet.send(agent, "lua", "disconnect")
+		offlines[uid] = true
+		timer.timeout(OFFLINE_TIMEOUT, offline_timeout, uid)
+	end
 end
 
 skynet.start(function()

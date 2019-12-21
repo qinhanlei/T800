@@ -124,11 +124,15 @@ end
 
 function handle.close(id, code, reason)
 	log.info("ws:%s on close code:%s reason:%s", id, code, reason)
+	local w = ws_map[id]
+	skynet.send(".user/mgr", "lua", "delete", w.uid, "socket close manually")
 	ws_map[id] = nil
 end
 
 function handle.error(id)
 	log.error("ws:%s on error", id)
+	local w = ws_map[id]
+	skynet.send(".user/mgr", "lua", "disconnect", w.uid)
 	ws_map[id] = nil
 end
 

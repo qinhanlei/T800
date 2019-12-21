@@ -6,7 +6,7 @@ local thread = tonumber(skynet.getenv("thread"))
 local agents
 
 
-local function pickagent(id)
+local function get(id)
 	return agents[(id % #agents) + 1]
 end
 
@@ -22,8 +22,7 @@ end
 local CMD = setmetatable({}, {
 	__index = function(_, cmd)
 		return function(gta, id, msg)
-			local agent = pickagent(gta)
-			return skynet.call(agent, "lua", cmd, gta, id, msg)
+			return skynet.call(get(id), "lua", cmd, gta, id, msg)
 		end
 	end
 })

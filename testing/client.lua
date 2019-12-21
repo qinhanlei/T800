@@ -6,7 +6,7 @@ local msgutil = require "msgutil"
 
 local GATE_ADDR = "ws://127.0.0.1:10086"
 
-local QUICK_TIME = 60*60*100
+local QUIT_TIME = 8*60*100
 local TICK_INTERVAL = 3*100
 
 local CMD = {}
@@ -40,8 +40,10 @@ local function readloop()
 	while ws_id do
 		local ok, resp, close_reason = pcall(websocket.read, ws_id)
 		if not ok then
-			log.error("call websocket read failed!", resp)
-			ws_id = nil
+			if ws_id ~= nil then
+				log.error("websocket read failed!", resp)
+				ws_id = nil
+			end
 			break
 		end
 		if not resp then
@@ -106,8 +108,12 @@ local function main()
 	skynet.fork(readloop)
 	skynet.fork(register)
 
-	skynet.timeout(QUICK_TIME, function()
-		websocket.close(ws_id, 0, "client-quit")
+	skynet.timeout(QUIT_TIME, function()
+		log.debug("quit timeout!")
+		local id = ws_id
+		ws_id = nil
+		websocket.close(id, 0, "client-quit")
+		log.debug("websocket sent close done!")
 	end)
 end
 

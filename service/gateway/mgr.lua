@@ -10,8 +10,7 @@ local ip = "127.0.0.1"
 local port = 10086
 
 
-local function pickagent(id)
-	log.debug("pick %d ws agent for wsid:%d", (id % #agents) + 1, id)
+local function get(id)
 	return agents[(id % #agents) + 1]
 end
 
@@ -26,15 +25,15 @@ local function launch()
 	local listenid = socket.listen(ip, port)
 	socket.start(listenid, function(id, addr)
 		log.debug("on connect id:%s addr:%s", id, addr)
-		skynet.send(pickagent(id), "lua", "start", id, addr)
+		skynet.send(get(id), "lua", "start", id, addr)
 	end)
 end
 
 
 local CMD = {}
 
-function CMD.pickagent(wsid)
-	return pickagent(wsid)
+function CMD.agent(wsid)
+	return get(wsid)
 end
 
 
