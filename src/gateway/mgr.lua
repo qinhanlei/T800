@@ -18,7 +18,6 @@ end
 local function launch()
 	agents = {}
 	for i = 1, thread do
-		log.debug("launch gateway/agent [%d]", i)
 		agents[i] = skynet.newservice("gateway/agent", i)
 	end
 	log.debug("listen on %s:%s", ip, port)

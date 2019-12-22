@@ -13,7 +13,6 @@ end
 local function launch()
 	agents = {}
 	for i = 1, thread do
-		log.debug("launch login/agent [%d]", i)
 		agents[i] = skynet.newservice("login/agent", i)
 	end
 end
