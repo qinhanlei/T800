@@ -23,8 +23,9 @@ lua_cpath = skypath.."/luaclib/?.so;"..
 
 luaservice = skypath.."/service/?.lua;"..
 			tmpath.."/service/?.lua;"..
-			"./service/?.lua;"
+			"./service/?.lua;"..
+			"./src/?.lua;"
 lua_path = skypath.."/lualib/?.lua;"..
 			tmpath.."/lualib/?.lua;"..
-			"./service/?.lua;"..
-			"./lualib/?.lua;"
+			"./lualib/?.lua;"..
+			"./src/?.lua;"
