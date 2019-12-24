@@ -8,11 +8,4 @@ code.WS_STATE = {
 }
 
 
--- T800.proto common `result` coding
-code.RESULT = {
-	ok = 0,
-	err = 1,
-}
-
-
 return code

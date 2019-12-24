@@ -7,24 +7,39 @@ local CMD = {}
 
 function CMD.Register(gta, id, msg)
 	log.info("ws:%d register msg:%s", id, xdump(msg))
-	--TODO: ...
+	local ret, err
+	--TODO: check account password nickname
+	ret = skynet.call(".database/mgr", "lua", "user_query", {account = msg.account})
+	if ret then
+		log.warn("user account:%s already exist", msg.account)
+		return "account already exist"
+	end
+	ret, err = skynet.call(".database/mgr", "lua", "user_create", msg)
+	if not ret then
+		log.error("user create failed: %s", err)
+		return "register failed!"
+	end
 	log.debug("register succeed!")
-	return 0
+	return "ok"
 end
 
 function CMD.Auth(gta, id, msg)
 	log.info("ws:%d auth msg:%s", id, xdump(msg))
-
-	--TODO: query user info by msg.account
-	local userid = id + 100000
+	local ret = skynet.call(".database/mgr", "lua", "user_query", {
+		account = msg.account,
+		-- password = msg.password,
+	})
+	if not ret then
+		return "account not exist or invalid password"
+	end
 	local uagent = skynet.call(".user/mgr", "lua", "new", {
-		uid = userid,
+		userid = ret.userid,
 		gtagent = gta,
-		nickname = "nickname"..id,
+		nickname = ret.nickname,
 	})
 	log.debug("auth succeed!")
-	skynet.send(gta, "lua", "authed", id, userid, uagent)
-	return 0
+	skynet.send(gta, "lua", "authed", id, ret.userid, uagent)
+	return "ok"
 end
 
 

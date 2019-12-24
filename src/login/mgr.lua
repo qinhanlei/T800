@@ -3,7 +3,7 @@ require "skynet.manager"
 local log = require "tm.log"
 local thread = tonumber(skynet.getenv("thread"))
 
-local agents
+local agents = {}
 
 
 local function get(id)
@@ -11,7 +11,6 @@ local function get(id)
 end
 
 local function launch()
-	agents = {}
 	for i = 1, thread do
 		agents[i] = skynet.newservice("login/agent", i)
 	end

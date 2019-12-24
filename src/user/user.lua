@@ -3,30 +3,30 @@ local log = require "tm.log"
 local xtable = require "tm.xtable"
 local xdump = xtable.dump
 
-local _u = nil
+local _u = nil  -- userinfo
 
 local function ticktock()
 	while true do
-		log.debug("tick tick user:%d", _u.uid)
+		log.debug("user:%d ticktock ...", _u.userid)
 		skynet.sleep(300)
 	end
 end
 
 local CMD = {}
 
-function CMD.start(u)
-	log.debug("start user: %s", xdump(u))
-	_u = u
+function CMD.start(info)
+	log.debug("start user: %s", xdump(info))
+	_u = info
 	skynet.fork(ticktock)
 end
 
 function CMD.stop(reason)
-	log.debug("user:%d stop by reason:%s", _u.uid, reason)
+	log.debug("user:%d stop by reason:%s", _u.userid, reason)
 	skynet.exit()
 end
 
 function CMD.disconnect()
-	log.debug("user:%d disconnect, waitting for reconnect", _u.uid)
+	log.debug("user:%d disconnect, waitting for reconnect", _u.userid)
 	--TODO: ...
 end
 

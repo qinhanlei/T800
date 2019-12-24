@@ -4,7 +4,7 @@ local socket = require "skynet.socket"
 local log = require "tm.log"
 local thread = tonumber(skynet.getenv("thread"))
 
-local agents
+local agents = {}
 
 local ip = "127.0.0.1"
 local port = 10086
@@ -16,7 +16,6 @@ end
 
 
 local function launch()
-	agents = {}
 	for i = 1, thread do
 		agents[i] = skynet.newservice("gateway/agent", i)
 	end
@@ -37,7 +36,7 @@ end
 
 
 skynet.start(function()
-	skynet.dispatch("lua", function(_, _, cmd, ...)
+	skynet.dispatch("lua", function(session, source, cmd, ...)
 		local f = CMD[cmd]
 		if not f then
 			log.error("session:%s source:%x cmd:%s nil", session, source, cmd)

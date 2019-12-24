@@ -4,10 +4,8 @@ local log = require "tm.log"
 skynet.start(function()
 	log.info("Hi, this is Terminator 1G: T800")
 
-	-- order matters
 	skynet.uniqueservice("database/mgr")
 	skynet.uniqueservice("user/mgr")
-	skynet.uniqueservice("logic/mgr")
 	skynet.uniqueservice("dungeon/mgr")
 	skynet.uniqueservice("login/mgr")
 	skynet.uniqueservice("gateway/mgr")

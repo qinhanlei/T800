@@ -10,12 +10,12 @@ local QUIT_TIME = 8*60*100
 local TICK_INTERVAL = 3*100
 
 local CMD = {}
-local clientid = ...
 local ws_id
 
-local _account = string.format("test%03d", clientid)
-local _password = "123456"
-local _nickname = string.format("Tester%d", clientid)
+local userid
+local _account
+local _password
+local _nickname
 
 
 local function send(name, msg)
@@ -47,7 +47,7 @@ local function readloop()
 			break
 		end
 		if not resp then
-			log.error("client:%d server close by reason:%s", clientid, close_reason)
+			log.error("client:%d server close by reason:%s", userid, close_reason)
 			ws_id = nil
 			break
 		end
@@ -99,8 +99,13 @@ end
 
 
 local function main()
-	clientid = clientid or 0
-	log.debug("this is echo client:%d connect to %s", clientid, GATE_ADDR)
+	userid = math.floor(skynet.time())
+	log.debug("userid:%s %s", userid, type(userid))
+	_account = string.format("test%d", userid)
+	_password = "123456"
+	_nickname = string.format("Tester%d", userid)
+
+	log.debug("this is echo client:%d connect to %s", userid, GATE_ADDR)
 
 	ws_id = websocket.connect(GATE_ADDR)
 

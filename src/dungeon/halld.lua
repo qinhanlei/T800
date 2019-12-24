@@ -1,5 +1,6 @@
 -- main system after user login
 local skynet = require "skynet"
+require "skynet.manager"
 local log = require "tm.log"
 
 local CMD = {}
@@ -13,4 +14,5 @@ skynet.start(function()
 		end
 		return skynet.retpack(f(...))
 	end)
+	skynet.register(".logic/mgr")
 end)

@@ -91,7 +91,7 @@ function handle.handshake(id, header, url)
 	log.debug("ws:%s on handshake from url:%s addr:%s", id, url, addr)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
-		uid = nil,
+		userid = nil,
 		state = STATE.shaked,
 		lasttime = now,
 		shakedtime = now,
@@ -125,14 +125,14 @@ end
 function handle.close(id, code, reason)
 	log.info("ws:%s on close code:%s reason:%s", id, code, reason)
 	local w = ws_map[id]
-	skynet.send(".user/mgr", "lua", "delete", w.uid, "socket close manually")
+	skynet.send(".user/mgr", "lua", "delete", w.userid, "socket close manually")
 	ws_map[id] = nil
 end
 
 function handle.error(id)
 	log.error("ws:%s on error", id)
 	local w = ws_map[id]
-	skynet.send(".user/mgr", "lua", "disconnect", w.uid)
+	skynet.send(".user/mgr", "lua", "disconnect", w.userid)
 	ws_map[id] = nil
 end
 
@@ -143,9 +143,9 @@ function CMD.start(...)
 	skynet.fork(accept, ...)
 end
 
-function CMD.authed(id, uid, uagent)
+function CMD.authed(id, userid, uagent)
 	local w = ws_map[id]
-	w.uid = uid
+	w.userid = userid
 	w.uagent = uagent
 	w.state = STATE.authed
 	log.debug("ws:%d authed! %s", id, xdump(ws_map[id]))
