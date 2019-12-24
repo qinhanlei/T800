@@ -4,10 +4,7 @@ local xdump = require "tm.xtable".dump
 
 local protobuf = require "protobuf"
 local parser = require "parser"
-
-local PACKAGE = "T800"
-
-parser.register(PACKAGE..".proto", "./proto")
+parser.register({"c2s.proto", "s2c.proto"}, "./proto")
 
 local msgutil = {}
 
@@ -23,13 +20,12 @@ end
 
 
 function msgutil.pack(name, msg)
-	local fullname = PACKAGE..'.'..name
-	if not protobuf.check(fullname) then
+	if not protobuf.check(name) then
 		log.warn("proto name:%s not exist!", name)
 		return nil, "invalid proto name"
 	end
 
-	local ok, data = pcall(protobuf.encode, fullname, msg)
+	local ok, data = pcall(protobuf.encode, name, msg)
 	if not ok then
 		log.error("encode proto:%s failed:%s msg:%s", name, data, xdump(msg))
 		return nil, data
@@ -53,14 +49,13 @@ function msgutil.unpack(data)
 	local name = data:sub(3, 2+n)
 	name = decode(name)
 
-	local fullname = PACKAGE..'.'..name
-	if not protobuf.check(fullname) then
+	if not protobuf.check(name) then
 		log.warn("proto name:%s not exist!", name)
 		return nil, "invalid proto name"
 	end
 
 	data = data:sub(3+n)
-	local ok, msg = pcall(protobuf.decode, fullname, data)
+	local ok, msg = pcall(protobuf.decode, name, data)
 	if not ok then
 		log.error("decode proto:%s failed:%s", name, msg)
 		return nil, msg

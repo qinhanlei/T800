@@ -44,7 +44,7 @@ local function ticktock()
 end
 
 local function send(id, name, msg)
-	local data = msgutil.pack(name, msg)
+	local data = msgutil.pack("s2c."..name, msg)
 	if not data then
 		return
 	end
@@ -101,14 +101,15 @@ end
 function handle.message(id, data)
 	log.debug("ws:%s on message", id)
 	ws_map[id].lasttime = skynet.now()
-	local name, msg = msgutil.unpack(data)
-	if not name then
+	local fullname, msg = msgutil.unpack(data)
+	if not fullname then
 		log.error("unpack data failed: %s", msg)
 		return
 	end
+	local _, name = fullname:match("(.+)%.(.+)")
 	local ok, ret = pcall(dispatch, id, name, msg)
 	if not ok then
-		log.error("dispatch name:%s msg:%s failed:%s", name, msg, ret)
+		log.error("dispatch %s failed:%s", fullname, ret)
 	end
 end
 

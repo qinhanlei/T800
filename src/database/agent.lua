@@ -20,7 +20,7 @@ local CMD = {}
 
 function CMD.initialize()
 	local misc = getcollection("misc")
-	misc:dropIndex("*"); misc:drop()
+	-- misc:dropIndex("*"); misc:drop()
 	local misc_user = {
 		collection = "user",
 		nextuid = 100000,
@@ -30,7 +30,7 @@ function CMD.initialize()
 	misc:insert(misc_user)
 
 	local user = getcollection("user")
-	user:dropIndex("*"); user:drop()
+	-- user:dropIndex("*"); user:drop()
 	user:createIndex({userid = 1}, {unique = true})
 	user:createIndex({account = 1}, {unique = true})
 end
@@ -39,13 +39,12 @@ function CMD.user_query(cond)
 	assert(type(cond) == "table" and (cond.account or cond.userid))
 	local coll = getcollection("user")
 	local cursor = coll:find(cond)
-	local result = nil
+	local result = {}
 	while cursor:hasNext() do
-		result = result or {}
 		table.insert(result, cursor:next())
 	end
-	if result and #result == 1 then
-		result = result[1]
+	if #result <= 1 then
+		return result[1]
 	end
 	return result
 end

@@ -19,7 +19,7 @@ local _nickname
 
 
 local function send(name, msg)
-	local data = msgutil.pack(name, msg)
+	local data = msgutil.pack("c2s."..name, msg)
 	if data then
 		websocket.write(ws_id, data, "binary")
 	end
@@ -52,13 +52,14 @@ local function readloop()
 			break
 		end
 
-		local name, msg = msgutil.unpack(resp)
-		if not name then
+		local fullname, msg = msgutil.unpack(resp)
+		if not fullname then
 			log.error("unpack failed:%s", msg)
 		else
+			local _, name = fullname:match("(.+)%.(.+)")
 			local f = CMD[name]
 			if not f then
-				log.warn("have no CMD for proto:%s", name)
+				log.warn("have no CMD for proto:%s", fullname)
 			else
 				f(msg)
 			end

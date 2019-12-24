@@ -1,9 +1,7 @@
-package T800;
+package c2s;
 
 // Let all client request proto have response proto for simple
 // Request (or Server pushed only) proto are Big hump naming
-// Response proto must be `onXEQ` which `XEQ` is request proto
-//   must have string `result` property, "ok" or other error msg else
 
 message Register {
 	required string account = 1;
@@ -11,20 +9,10 @@ message Register {
 	required string nickname = 3;
 }
 
-message onRegister {
-	required string result = 1;
-}
-
-
 message Auth {
 	required string account = 1;
 	required string password = 2;
 }
-
-message onAuth {
-	required string result = 1;
-}
-
 
 message UserInfo {
 	required string userid = 1;

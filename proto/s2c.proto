@@ -1,0 +1,17 @@
+package s2c;
+
+// Let all client request proto have response proto for simple
+// Response proto must be `onXEQ` which `XEQ` is request proto
+// Must have string `result` property, "ok" or other error msg else
+
+message onRegister {
+	required string result = 1;
+}
+
+message onAuth {
+	required string result = 1;
+}
+
+message onUserInfo {
+	required string userid = 1;
+}
