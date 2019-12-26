@@ -4,14 +4,18 @@ package c2s;
 // Request (or Server pushed only) proto are Big hump naming
 
 message Register {
+	// account, guest, 3rd (Google/Facebook/Wechat ...)
+	optional string type = 1;
 	required string account = 1;
 	required string password = 2;
 	required string nickname = 3;
 }
 
-message Auth {
-	required string account = 1;
-	required string password = 2;
+message Login {
+	optional string type = 1;
+	required string account = 2;
+	required string password = 3;
+	optional string token = 4;
 }
 
 message UserInfo {

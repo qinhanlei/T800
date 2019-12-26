@@ -8,7 +8,7 @@ local msgutil = require "msgutil"
 local mycode = require "mycode"
 
 local CONN_TIMEOUT = 10*100
-local AUTH_TIMEOUT = 8*60*100
+local LOGIN_TIMEOUT = 8*60*100
 local STATE = mycode.WS_STATE
 
 --NOTE: handler API list by websocket.lua, see simplewebsocket.lua
@@ -28,10 +28,10 @@ local function ticktock()
 		now = skynet.now()
 		for k, v in pairs(ws_map) do
 			if now - v.lasttime > CONN_TIMEOUT then
-				skynet.fork(timeout, k, "activity_timeout")
+				skynet.fork(timeout, k, "ping_timeout")
 			end
-			if v.state == STATE.shaked and now - v.shakedtime > AUTH_TIMEOUT then
-				skynet.fork(timeout, k, "auth_timeout")
+			if v.state ~= STATE.logined and now - v.shakedtime > LOGIN_TIMEOUT then
+				skynet.fork(timeout, k, "login_timeout")
 			end
 			count = count + 1
 			if count > 100 then
@@ -44,8 +44,9 @@ local function ticktock()
 end
 
 local function send(id, name, msg)
-	local data = msgutil.pack("s2c."..name, msg)
+	local data, err = msgutil.pack("s2c."..name, msg)
 	if not data then
+		log.error("pack name:%s failed:%s msg:%s", name, err, msg)
 		return
 	end
 	local ok, ret = pcall(websocket.write, id, data, "binary")
@@ -100,12 +101,18 @@ end
 
 function handle.message(id, data)
 	log.debug("ws:%s on message", id)
-	ws_map[id].lasttime = skynet.now()
+	local w = ws_map[id]
+	w.lasttime = skynet.now()
+
 	local fullname, msg = msgutil.unpack(data)
 	if not fullname then
 		log.error("unpack data failed: %s", msg)
+		if w.state == STATE.shaked then
+			websocket.close(id, 404, "network error, try later.")
+		end
 		return
 	end
+
 	local _, name = fullname:match("(.+)%.(.+)")
 	local ok, ret = pcall(dispatch, id, name, msg)
 	if not ok then
@@ -126,15 +133,19 @@ end
 function handle.close(id, code, reason)
 	log.info("ws:%s on close code:%s reason:%s", id, code, reason)
 	local w = ws_map[id]
-	skynet.send(".user/mgr", "lua", "delete", w.userid, "socket close manually")
 	ws_map[id] = nil
+	if w.state == STATE.logined then
+		skynet.send(".user/mgr", "lua", "delete", w.userid, "socket close manually")
+	end
 end
 
 function handle.error(id)
 	log.error("ws:%s on error", id)
 	local w = ws_map[id]
-	skynet.send(".user/mgr", "lua", "disconnect", w.userid)
 	ws_map[id] = nil
+	if w.state == STATE.logined then
+		skynet.send(".user/mgr", "lua", "disconnect", w.userid)
+	end
 end
 
 
@@ -144,12 +155,12 @@ function CMD.start(...)
 	skynet.fork(accept, ...)
 end
 
-function CMD.authed(id, userid, uagent)
+function CMD.login(id, userid, uagent)
 	local w = ws_map[id]
 	w.userid = userid
 	w.uagent = uagent
-	w.state = STATE.authed
-	log.debug("ws:%d authed! %s", id, xdump(ws_map[id]))
+	w.state = STATE.logined
+	log.debug("ws:%d logined! %s", id, xdump(ws_map[id]))
 end
 
 function CMD.sendmsg(id, name, msg)
@@ -157,7 +168,7 @@ function CMD.sendmsg(id, name, msg)
 end
 
 skynet.start(function()
-	skynet.dispatch("lua", function(_, _, cmd, ...)
+	skynet.dispatch("lua", function(session, source, cmd, ...)
 		local f = CMD[cmd]
 		if not f then
 			log.error("session:%s source:%x cmd:%s nil", session, source, cmd)

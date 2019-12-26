@@ -17,12 +17,16 @@ local _account
 local _password
 local _nickname
 
+local msgkey = "96781234"
+
 
 local function send(name, msg)
-	local data = msgutil.pack("c2s."..name, msg)
-	if data then
-		websocket.write(ws_id, data, "binary")
+	local data, err = msgutil.pack("c2s."..name, msg, msgkey)
+	if not data then
+		log.error("pack name:%s failed:%s msg:%s", name, err, msg)
+		return
 	end
+	websocket.write(ws_id, data, "binary")
 end
 
 
@@ -70,12 +74,12 @@ local function readloop()
 end
 
 
-local function auth()
+local function login()
 	local msg = {
 		account = _account,
 		password = _password,
 	}
-	send("Auth", msg)
+	send("Login", msg)
 end
 
 
@@ -91,11 +95,11 @@ end
 
 function CMD.onRegister(msg)
 	log.debug("onRegister msg:%s", xdump(msg))
-	auth()
+	login()
 end
 
-function CMD.onAuth(msg)
-	log.debug("onAuth msg:%s", xdump(msg))
+function CMD.onLogin(msg)
+	log.debug("onLogin msg:%s", xdump(msg))
 end
 
 

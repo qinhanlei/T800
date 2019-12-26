@@ -8,10 +8,13 @@ message onRegister {
 	required string result = 1;
 }
 
-message onAuth {
+message onLogin {
 	required string result = 1;
 }
 
 message onUserInfo {
-	required string userid = 1;
+	required string result = 1;
+	required string userid = 2;
+	required string nickname = 3;
+	required string gold = 4;
 }

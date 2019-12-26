@@ -17,8 +17,7 @@ OUTSIDE <===> http:agents -- all other services
   - connect with client
   - forward websocket protobuf msg
 - `login`
-  - regitster
-  - auth
+  - regitster/login
 - `dungeon`
   - the game world 
 - `database`

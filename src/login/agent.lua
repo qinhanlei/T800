@@ -23,8 +23,8 @@ function CMD.Register(gta, id, msg)
 	return "ok"
 end
 
-function CMD.Auth(gta, id, msg)
-	log.info("ws:%d auth msg:%s", id, xdump(msg))
+function CMD.Login(gta, id, msg)
+	log.info("ws:%d login msg:%s", id, xdump(msg))
 	local ret = skynet.call(".database/mgr", "lua", "user_query", {
 		account = msg.account,
 		-- password = msg.password,
@@ -37,8 +37,8 @@ function CMD.Auth(gta, id, msg)
 		gtagent = gta,
 		nickname = ret.nickname,
 	})
-	log.debug("auth succeed!")
-	skynet.send(gta, "lua", "authed", id, ret.userid, uagent)
+	log.debug("login succeed!")
+	skynet.send(gta, "lua", "login", id, ret.userid, uagent)
 	return "ok"
 end
 
