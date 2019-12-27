@@ -1,6 +1,7 @@
 -- websocket agent
 local skynet = require "skynet"
 require "skynet.manager"
+local crypt = require "skynet.crypt"
 local websocket = require "http.websocket"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
@@ -10,10 +11,12 @@ local mycode = require "mycode"
 local CONN_TIMEOUT = 10*100
 local LOGIN_TIMEOUT = 8*60*100
 local STATE = mycode.WS_STATE
+local DEFAULT_DES_KEY = "abcd1234"
 
 --NOTE: handler API list by websocket.lua, see simplewebsocket.lua
 local handle = {}
 local ws_map = {}  -- ws_id -> ws_info:table
+local serverkey = nil
 
 
 local function timeout(id, reason)
@@ -43,10 +46,12 @@ local function ticktock()
 	end
 end
 
-local function send(id, name, msg)
-	local data, err = msgutil.pack("s2c."..name, msg)
+local function send(id, name, msg, key)
+	key = key or DEFAULT_DES_KEY
+	log.debug("send %s msg: %s", name, xdump(msg))
+	local data, err = msgutil.pack("s2c."..name, msg, key)
 	if not data then
-		log.error("pack name:%s failed:%s msg:%s", name, err, msg)
+		log.error("pack name:%s failed:`%s` msg:%s", name, err, xdump(msg))
 		return
 	end
 	local ok, ret = pcall(websocket.write, id, data, "binary")
@@ -64,20 +69,20 @@ local function accept(id, addr, protocol)
 	end
 end
 
-local function dispatch(id, name, msg)
-	local service
-	local w = ws_map[id]
-	if w.state == STATE.shaked then
-		service = ".login/mgr"
+local function dispatch(w, name, msg, key)
+	local ret
+	local id = w.id
+
+	if w.state ~= STATE.logined then
+		ret = skynet.call(".login/mgr", "lua", name, id, msg, serverkey)
 	else
-		service = w.uagent
+		ret = skynet.call(w.uagent, "lua", name, id, msg)
 	end
-	if not service then return end
-	local ret = skynet.call(service, "lua", name, id, msg)
+
 	if type(ret) == "table" then
-		send(id, "on"..name, ret)
+		send(id, "on"..name, ret, key)
 	elseif ret then
-		send(id, "on"..name, { result = ret })
+		send(id, "on"..name, { result = ret }, key)
 	end
 end
 
@@ -92,10 +97,12 @@ function handle.handshake(id, header, url)
 	log.debug("ws:%s on handshake from url:%s addr:%s", id, url, addr)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
+		id = id,
 		userid = nil,
 		state = STATE.shaked,
 		lasttime = now,
 		shakedtime = now,
+		secret = nil,
 	}
 end
 
@@ -104,17 +111,18 @@ function handle.message(id, data)
 	local w = ws_map[id]
 	w.lasttime = skynet.now()
 
-	local fullname, msg = msgutil.unpack(data)
+	local key = w.secret or DEFAULT_DES_KEY
+	local fullname, msg = msgutil.unpack(data, key)
 	if not fullname then
 		log.error("unpack data failed: %s", msg)
-		if w.state == STATE.shaked then
+		if w.state ~= STATE.logined then
 			websocket.close(id, 404, "network error, try later.")
 		end
 		return
 	end
 
 	local _, name = fullname:match("(.+)%.(.+)")
-	local ok, ret = pcall(dispatch, id, name, msg)
+	local ok, ret = pcall(dispatch, w, name, msg, key)
 	if not ok then
 		log.error("dispatch %s failed:%s", fullname, ret)
 	end
@@ -157,10 +165,19 @@ end
 
 function CMD.login(id, userid, uagent)
 	local w = ws_map[id]
-	w.userid = userid
-	w.uagent = uagent
-	w.state = STATE.logined
-	log.debug("ws:%d logined! %s", id, xdump(ws_map[id]))
+	if w then
+		w.userid = userid
+		w.uagent = uagent
+		w.state = STATE.logined
+		log.debug("ws:%d logined! %s", id, xdump(ws_map[id]))
+	end
+end
+
+function CMD.secret(id, secret)
+	local w = ws_map[id]
+	if w then
+		w.secret = secret
+	end
 end
 
 function CMD.sendmsg(id, name, msg)
@@ -177,4 +194,6 @@ skynet.start(function()
 		return skynet.retpack(f(...))
 	end)
 	skynet.fork(ticktock)
+	serverkey = crypt.randomkey()
+	log.info("serverkey : %s", serverkey)
 end)

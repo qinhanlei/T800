@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+local crypt = require "skynet.crypt"
 local websocket = require "http.websocket"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
@@ -13,14 +14,17 @@ local CMD = {}
 local ws_id
 
 local userid
+local clientkey
+
 local _account
 local _password
 local _nickname
 
-local msgkey = "96781234"
+local msgkey = "abcd1234"
 
 
 local function send(name, msg)
+	log.debug("send %s msg: %s", name, xdump(msg))
 	local data, err = msgutil.pack("c2s."..name, msg, msgkey)
 	if not data then
 		log.error("pack name:%s failed:%s msg:%s", name, err, msg)
@@ -56,7 +60,8 @@ local function readloop()
 			break
 		end
 
-		local fullname, msg = msgutil.unpack(resp)
+		-- log.debug("unpack msg:%s by msgkey:%s", resp, crypt.hexencode(msgkey))
+		local fullname, msg = msgutil.unpack(resp, msgkey)
 		if not fullname then
 			log.error("unpack failed:%s", msg)
 		else
@@ -92,6 +97,23 @@ local function register()
 	send("Register", msg)
 end
 
+local function dhkey()
+	local msg = {
+		clientkey = crypt.base64encode(crypt.dhexchange(clientkey)),
+	}
+	send("DHkey", msg)
+end
+
+
+function CMD.onDHkey(msg)
+	log.debug("onDHkey msg:%s", xdump(msg))
+	local serverkey = crypt.base64decode(msg.serverkey)
+	log.debug("got public serverkey: %s", crypt.hexencode(serverkey))
+	local secret = crypt.dhsecret(crypt.base64decode(msg.serverkey), clientkey)
+	log.debug("got dhsecret: %s", crypt.hexencode(secret))
+	msgkey = secret
+	register()
+end
 
 function CMD.onRegister(msg)
 	log.debug("onRegister msg:%s", xdump(msg))
@@ -105,6 +127,9 @@ end
 
 local function main()
 	userid = math.floor(skynet.time())
+	clientkey = crypt.randomkey()
+	log.debug("clientkey: %s", crypt.hexencode(clientkey))
+
 	log.debug("userid:%s %s", userid, type(userid))
 	_account = string.format("test%d", userid)
 	_password = "123456"
@@ -116,7 +141,7 @@ local function main()
 
 	skynet.fork(ticktock)
 	skynet.fork(readloop)
-	skynet.fork(register)
+	skynet.fork(dhkey)
 
 	skynet.timeout(QUIT_TIME, function()
 		log.debug("quit timeout!")

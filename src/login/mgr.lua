@@ -19,8 +19,8 @@ end
 
 local CMD = setmetatable({}, {
 	__index = function(_, cmd)
-		return function(gta, id, msg)
-			return skynet.call(get(id), "lua", cmd, gta, id, msg)
+		return function(gta, id, msg, ...)
+			return skynet.call(get(id), "lua", cmd, gta, id, msg, ...)
 		end
 	end
 })

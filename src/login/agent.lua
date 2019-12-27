@@ -1,9 +1,26 @@
 local skynet = require "skynet"
 require "skynet.manager"
+local crypt = require "skynet.crypt"
 local log = require "tm.log"
 local xdump = require "tm.xtable".dump
 
 local CMD = {}
+
+function CMD.DHkey(gta, id, msg, serverkey)
+	log.info("ws:%d DHkey msg:%s", id, xdump(msg))
+	local clientkey = crypt.base64decode(msg.clientkey)
+	if #clientkey ~= 8 then
+		return "Invalid client key"
+	end
+	log.debug("got public clientkey:%s", crypt.hexencode(clientkey))
+	local secret = crypt.dhsecret(clientkey, serverkey)
+	log.debug("got dhsecret:%s", crypt.hexencode(secret))
+	skynet.send(gta, "lua", "secret", id, secret)
+	return {
+		result = "ok",
+		serverkey = crypt.base64encode(crypt.dhexchange(serverkey))
+	}
+end
 
 function CMD.Register(gta, id, msg)
 	log.info("ws:%d register msg:%s", id, xdump(msg))

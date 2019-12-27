@@ -4,6 +4,11 @@ package s2c;
 // Response proto must be `onXEQ` which `XEQ` is request proto
 // Must have string `result` property, "ok" or other error msg else
 
+message onDHkey {
+	required string result = 1;
+	optional string serverkey = 2;
+}
+
 message onRegister {
 	required string result = 1;
 }
