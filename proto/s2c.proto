@@ -15,10 +15,6 @@ message onRegister {
 
 message onLogin {
 	required string result = 1;
-}
-
-message onUserInfo {
-	required string result = 1;
 	required string userid = 2;
 	required string nickname = 3;
 	required string gold = 4;

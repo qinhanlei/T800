@@ -21,7 +21,3 @@ message Login {
 	required string password = 3;
 	optional string token = 4;
 }
-
-message UserInfo {
-	required string userid = 1;
-}

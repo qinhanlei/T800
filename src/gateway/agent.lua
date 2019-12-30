@@ -76,7 +76,7 @@ local function dispatch(w, name, msg, key)
 	if w.state ~= STATE.logined then
 		ret = skynet.call(".login/mgr", "lua", name, id, msg, serverkey)
 	else
-		ret = skynet.call(w.uagent, "lua", name, id, msg)
+		ret = skynet.call(w.user, "lua", name, id, msg)
 	end
 
 	if type(ret) == "table" then
@@ -98,6 +98,7 @@ function handle.handshake(id, header, url)
 	log.debug("header: %s", xdump(header))
 	ws_map[id] = {
 		id = id,
+		user = nil,  -- user/user service
 		userid = nil,
 		state = STATE.shaked,
 		lasttime = now,
@@ -163,11 +164,11 @@ function CMD.start(...)
 	skynet.fork(accept, ...)
 end
 
-function CMD.login(id, userid, uagent)
+function CMD.login(id, userid, user)
 	local w = ws_map[id]
 	if w then
+		w.user = user
 		w.userid = userid
-		w.uagent = uagent
 		w.state = STATE.logined
 		log.debug("ws:%d logined! %s", id, xdump(ws_map[id]))
 	end

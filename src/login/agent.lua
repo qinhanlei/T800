@@ -49,14 +49,21 @@ function CMD.Login(gta, id, msg)
 	if not ret then
 		return "account not exist or invalid password"
 	end
-	local uagent = skynet.call(".user/mgr", "lua", "new", {
-		userid = ret.userid,
+	-- log.debug("user_query ret: %s", xdump(ret))
+	local user = skynet.call(".user/mgr", "lua", "new", {
 		gtagent = gta,
+		userid = ret.userid,
 		nickname = ret.nickname,
+		gold = ret.gold,
 	})
 	log.debug("login succeed!")
-	skynet.send(gta, "lua", "login", id, ret.userid, uagent)
-	return "ok"
+	skynet.send(gta, "lua", "login", id, ret.userid, user)
+	return {
+		result = "ok",
+		userid = ret.userid,
+		nickname = ret.nickname,
+		gold = ret.gold,
+	}
 end
 
 
